@@ -97,7 +97,8 @@ class TestAvailableToPromiseReleaseCancel(PromiseReleaseCommonCase):
         self.assertFalse(cancel_picking.user_id)
         self.assertEqual(len(cancel_picking), 1)
         self.assertEqual(cancel_picking.location_id, self.loc_output)
-        self.assertEqual(cancel_picking.location_dest_id, self.loc_stock)
+        for move in cancel_picking.move_ids:
+            self.assertEqual(move.location_dest_id, self.loc_stock)
 
     def test_unrelease_picked_partial(self):
         qty_picked = [(self.product1, 5.0)]
@@ -156,7 +157,7 @@ class TestAvailableToPromiseReleaseCancel(PromiseReleaseCommonCase):
         ship_picking = self._out_picking(picking_chain)
         ship_picking.release_available_to_promise()
         # Creating a second move. Both moves thave the same origin (pack.move_line)
-        split_move_vals = ship_picking.move_lines._split(4)
+        split_move_vals = ship_picking.move_ids._split(4)
         split_move_vals[0]["date_deadline"] = datetime.now()
         split_move = self.env["stock.move"].create(split_move_vals)
         split_move._action_confirm()

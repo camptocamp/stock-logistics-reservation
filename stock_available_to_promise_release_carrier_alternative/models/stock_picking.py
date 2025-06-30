@@ -8,24 +8,23 @@ from odoo.tools.safe_eval import const_eval
 class StockPicking(models.Model):
     _inherit = "stock.picking"
 
-    estimated_shipping_weight = fields.Float(
-        string="Estimated shipping weight",
-        compute="_compute_estimated_shipping_weight",
-        help="This weight is calculated according to the move quantity "
-        "available to promise and existing product packagings weight for each "
-        "product on the moves.",
-    )
 
-    @api.depends("move_lines", "move_lines.estimated_shipping_weight")
-    def _compute_estimated_shipping_weight(self):
-        for pick in self:
-            pick.estimated_shipping_weight = sum(
-                pick.move_lines.mapped("estimated_shipping_weight")
-            )
-
-    def add_preferred_carrier(self):
+    def _carrier_can_be_changed(self):
         self.ensure_one()
-        carrier = fields.first(self.get_preferred_carriers())
+        active_moves = self.move_ids.filtered(
+            lambda move: move.state not in ("done", "cancel")
+        )
+        if active_moves:
+            for move in active_moves:
+                if not move.need_release:
+                    return False
+            return True
+
+
+    def check_alternative_carriers(self):
+        if not self._carrier_can_be_changed():
+            return
+        carrier = self.get_preferred_carrier()
         if not carrier:
             return {
                 "warning": {
@@ -37,60 +36,14 @@ class StockPicking(models.Model):
                     ),
                 }
             }
-        else:
-            # Set a context key to not trigger a carrier change on the
-            # procurement group.
-            self.with_context(skip_align_group_carrier=True).carrier_id = carrier
+        # Set a context key to not trigger a carrier change on the
+        # procurement group
+        self.with_context(skip_align_group_carrier=True).carrier_id = carrier
 
-    def get_preferred_carriers(self):
-        # TODO Check possible conflicting settings between doc company and
-        #  user preference defined on another company?
+    def get_preferred_carrier(self):
         self.ensure_one()
-        company_carriers = self.env["delivery.carrier"].search(
-            ["|", ("company_id", "=", False), ("company_id", "=", self.company_id.id)]
-        )
-        carrier_preferences = self.env["delivery.carrier.preference"].search(
-            [
-                "&",
-                "|",
-                ("max_weight", ">=", self.estimated_shipping_weight),
-                ("max_weight", "=", 0.0),
-                "|",
-                ("carrier_id", "in", company_carriers.ids),
-                ("carrier_id", "=", False),
-            ]
-        )
-        carriers_ids = list()
-        for cp in carrier_preferences:
-            if cp.picking_domain and not self._picking_domain_valid(cp):
-                continue
-
-            if cp.preference == "carrier":
-                carrier = cp.carrier_id
-                # carriers_ids.append(cp.carrier_id.id)
-            else:
-                # partner_carrier = self.partner_id.property_delivery_carrier_id
-                # if partner_carrier:
-                #     carriers_ids.append(partner_carrier.id)
-                carrier = self.partner_id.property_delivery_carrier_id
-            if not carrier or not self._carrier_valid(carrier):
-                continue
-            carriers_ids.append(carrier.id)
-        return (
-            self.env["delivery.carrier"]
-            .browse(carriers_ids)
-            .available_carriers(self.partner_id)
-        )
-
-    def _picking_domain_valid(self, carrier_preference):
-        self.ensure_one()
-        domain = const_eval(carrier_preference.picking_domain)
-        if not domain:
-            return True
-        else:
-            return self.search_count(AND([domain, [("id", "=", self.id)]]))
-
-    def _carrier_valid(self, carrier):
-        """Hook to add extra validation between carrier and picking"""
-        self.ensure_one()
-        return True
+        picking_carrier = self.carrier_id
+        alternative_carriers = picking_carrier | picking_carrier.alternative_carrier_ids
+        for carrier in alternative_carriers.sorted("sequence"):
+            if carrier._match_picking(self):
+                return carrier

@@ -10,40 +10,34 @@ class TestSaleDeliveryCarrierPreference(DeliveryCarrierPreferenceCommon):
         With a qty of 5 in the sale order and only 3 available to promise,
         estimated_shipping_weight is 30, and preferred carrier 'the poste'
         """
-        order = self._create_sale_order()
-        self._update_order_line_qty(order, 5)
         self.env["stock.quant"]._update_available_quantity(
-            self.product, self.loc_stock, 3
+            self.product1, self.loc_stock, 3
         )
-        order.action_confirm()
-        delivery_pick = order.picking_ids
+        delivery_pick = self._create_out_picking(product_qty=[(self.product1, 5)])
         self.assertAlmostEqual(delivery_pick.estimated_shipping_weight, 30.0)
-        delivery_pick.add_preferred_carrier()
+        delivery_pick.check_alternative_carriers()
         self.assertEqual(delivery_pick.carrier_id, self.the_poste_carrier)
 
     def test_delivery_release_available_to_promise(self):
         """
-        With carrier 'super fast' and a qty of 3 in the sale order,
+        With carrier 'super fast' and a qty of 3 required,
         only 2 available to promise, estimated_shipping_weight is 20.0,
         so preferred carrier after the release is 'normal' and backorder get
         'super fast'
         """
-        order = self._create_sale_order()
-        self._update_order_line_qty(order, 3)
         self.env["stock.quant"]._update_available_quantity(
-            self.product, self.loc_stock, 2
+            self.product1, self.loc_stock, 2
         )
-        self._add_shipping_on_order(order)
-        self.assertEqual(order.carrier_id, self.super_fast_carrier)
-        order.action_confirm()
-        delivery_pick = order.picking_ids
+        delivery_pick = self._create_out_picking(
+            product_qty=[(self.product1, 3)], carrier=self.super_fast_carrier
+        )
         self.assertAlmostEqual(delivery_pick.estimated_shipping_weight, 20.0)
         delivery_pick.release_available_to_promise()
+        backorder = delivery_pick.backorder_ids
         self.assertEqual(delivery_pick.carrier_id, self.normal_delivery_carrier)
         self.assertEqual(
             delivery_pick.group_id.carrier_id, self.normal_delivery_carrier
         )
-        backorder = delivery_pick.backorder_ids
         self.assertEqual(backorder.carrier_id, self.super_fast_carrier)
         self.assertEqual(backorder.group_id.carrier_id, self.super_fast_carrier)
 
@@ -53,14 +47,38 @@ class TestSaleDeliveryCarrierPreference(DeliveryCarrierPreferenceCommon):
         estimated_shipping_weight is 50, and with a priority of 0, preferred
         carrier must be free
         """
-        order = self._create_sale_order()
-        self._update_order_line_qty(order, 5)
         self.env["stock.quant"]._update_available_quantity(
-            self.product, self.loc_stock, 5
+            self.product1, self.loc_stock, 5
         )
-        order.action_confirm()
-        delivery_pick = order.picking_ids
+        delivery_pick = self._create_out_picking(product_qty=[(self.product1, 5)])
         self.assertEqual(delivery_pick.priority, PRIORITY_NORMAL)
         self.assertAlmostEqual(delivery_pick.estimated_shipping_weight, 50.0)
-        delivery_pick.add_preferred_carrier()
+        delivery_pick.check_alternative_carriers()
         self.assertEqual(delivery_pick.carrier_id, self.free_delivery_carrier)
+
+    def test_check_carrier_can_be_changed(self):
+        # cancelled pickings can't have their carrier updated
+        delivery_pick = self._create_out_picking(product_qty=[(self.product1, 4)])
+        delivery_pick.action_cancel()
+        self.assertFalse(delivery_pick._carrier_can_be_changed())
+        # released pickings can't have their carrier updated
+        self.env["stock.quant"]._update_available_quantity( self.product1, self.loc_stock, 4)
+        delivery_pick = self._create_out_picking(product_qty=[(self.product1, 4)])
+        delivery_pick.release_available_to_promise()
+        outgoing_pick = self._out_picking(delivery_pick)
+        self.assertFalse(outgoing_pick._carrier_can_be_changed())
+
+    def test_backorder(self):
+        self.env["stock.quant"]._update_available_quantity(self.product1, self.loc_stock, 3)
+        delivery_pick = self._create_out_picking(
+            product_qty=[(self.product1 , 3), (self.product2, 3)]
+        )
+        delivery_pick.move_ids.rule_id.no_backorder_at_release = True
+        # Setting rule's no_backorder_at_release to True, so the release doesnt
+        # creates a backorder
+        # by adding stock to only one of the two products of this picking,
+        # only one of the 2 created moves should be released.
+        # A backorder should be created.
+        delivery_pick.release_available_to_promise()
+        self.assertTrue(delivery_pick.backorder_id)
+

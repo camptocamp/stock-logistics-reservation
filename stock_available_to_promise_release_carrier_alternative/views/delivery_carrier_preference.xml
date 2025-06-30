@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <odoo>
-    <record id="delivery_carrier_preference_tree_view" model="ir.ui.view">
+    <record id="stock_available_to_promise_release_carrier_alternative_tree_view" model="ir.ui.view">
         <field name="name">delivery.carrier.preference.tree.view</field>
         <field name="model">delivery.carrier.preference</field>
         <field name="arch" type="xml">
@@ -17,7 +17,7 @@
             </tree>
         </field>
     </record>
-    <record id="delivery_carrier_preference_form_view" model="ir.ui.view">
+    <record id="stock_available_to_promise_release_carrier_alternative_form_view" model="ir.ui.view">
         <field name="name">delivery.carrier.preference.form.view</field>
         <field name="model">delivery.carrier.preference</field>
         <field name="arch" type="xml">
@@ -61,14 +61,14 @@
             </form>
         </field>
     </record>
-    <record id="action_delivery_carrier_preference_view" model="ir.actions.act_window">
+    <record id="action_stock_available_to_promise_release_carrier_alternative_view" model="ir.actions.act_window">
         <field name="name">Preferred Shipping Methods</field>
         <field name="res_model">delivery.carrier.preference</field>
     </record>
     <menuitem
-        id="menu_delivery_carrier_preference"
+        id="menu_stock_available_to_promise_release_carrier_alternative"
         name="Preferred Shipping Methods"
         parent="delivery.menu_delivery"
-        action="action_delivery_carrier_preference_view"
+        action="action_stock_available_to_promise_release_carrier_alternative_view"
     />
 </odoo>

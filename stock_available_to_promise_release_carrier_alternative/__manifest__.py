@@ -18,7 +18,7 @@
     ],
     "data": [
         "security/ir.model.access.csv",
-        "views/delivery_carrier_preference.xml",
+        "views/stock_available_to_promise_release_carrier_alternative.xml",
         "views/stock_move.xml",
         "views/stock_picking.xml",
         "views/stock_location_route.xml",

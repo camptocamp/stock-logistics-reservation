@@ -1,0 +1,1 @@
+odoo-addon-delivery_carrier_picking_valid_packaging_weight @ git+https://github.com/OCA/delivery-carrier@refs/pull/1031/head#subdirectory=delivery_carrier_picking_valid_packaging_weight

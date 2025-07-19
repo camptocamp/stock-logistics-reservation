@@ -1,0 +1,3 @@
+odoo-addon-delivery_total_weight_from_packaging @ git+https://github.com/OCA/stock-logistics-workflow@refs/pull/2032/head#subdirectory=delivery_total_weight_from_packaging
+odoo-addon-stock_picking_volume @ git+https://github.com/OCA/stock-logistics-warehouse@refs/pull/2390/head#subdirectory=stock_picking_volume
+odoo-addon-stock_picking_volume_packaging @ git+https://github.com/OCA/stock-logistics-warehouse@refs/pull/2382/head#subdirectory=stock_picking_volume_packaging

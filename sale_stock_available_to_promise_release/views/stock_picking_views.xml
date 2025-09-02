@@ -9,7 +9,7 @@
         />
         <field name="arch" type="xml">
             <field name="scheduled_date" position="after">
-                <field name="sale_date_expected" optional="show" />
+                <field name="sale_date_expected" optional="hide" />
             </field>
         </field>
     </record>

@@ -83,6 +83,7 @@ class StockPicking(models.Model):
     @api.depends(lambda self: self._get_release_ready_depends())
     def _compute_release_ready(self):
         self.move_ids.invalidate_recordset(["ordered_available_to_promise_qty"])
+        self.move_ids._compute_ordered_available_to_promise()
         for picking in self:
             moves = picking.move_ids.filtered(lambda move: move._is_release_needed())
             if not moves:
@@ -97,6 +98,7 @@ class StockPicking(models.Model):
     @api.depends(lambda self: self._get_release_ready_depends())
     def _compute_release_ready_count(self):
         self.move_ids.invalidate_recordset(["ordered_available_to_promise_qty"])
+        self.move_ids._compute_ordered_available_to_promise()
         for picking in self:
             moves = picking.move_ids.filtered(lambda move: move._is_release_needed())
             if not moves:

@@ -369,6 +369,7 @@ class StockMove(models.Model):
     @api.depends(lambda self: self._get_release_ready_depends())
     def _compute_release_ready(self):
         self.invalidate_recordset(["ordered_available_to_promise_qty"])
+        self._compute_ordered_available_to_promise()
         for move in self:
             release_ready = move._is_release_ready()
             if release_ready and move.picking_id.release_policy == "one":
@@ -468,7 +469,10 @@ class StockMove(models.Model):
         moves = self.search([("need_release", "=", True)])
         operator_func = operator_mapping[operator]
         # computed field has no depends set, invalidate cache before reading
+        #  and call the compute on all the moves to compute at once and not
+        #  on every move
         moves.invalidate_recordset(["ordered_available_to_promise_uom_qty"])
+        moves._compute_ordered_available_to_promise()
         moves = moves.filtered(
             lambda m: operator_func(m.ordered_available_to_promise_uom_qty, value)
         )

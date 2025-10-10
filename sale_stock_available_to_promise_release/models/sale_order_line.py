@@ -59,9 +59,8 @@ class SaleOrderLine(models.Model):
         # Fallback values
         availability_status = "no"
         expected_availability_date = False
-        available_qty = sum(
-            self.mapped("move_ids.ordered_available_to_promise_uom_qty")
-        )
+        moves = self.move_ids.filtered(lambda m: m.state != "cancel")
+        available_qty = sum(moves.mapped("ordered_available_to_promise_uom_qty"))
         delayed_qty = 0
         # required values
         product = self.product_id

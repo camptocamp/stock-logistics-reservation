@@ -36,6 +36,10 @@ class StockPicking(models.Model):
         # and I guess we do not want to force another carrier in such case.
         # see https://github.com/OCA/stock-logistics-reservation/pull/17#discussion_r2215062326
         possible_carriers = picking_carrier.alternative_carrier_ids
+        # I agree, added
+        # But I also think that without keeping the original carrier stored in a field
+        # there will be other issues
+        possible_carriers |= picking_carrier
         for carrier in possible_carriers.sorted("sequence"):
             if carrier._match_picking(self):
                 return carrier

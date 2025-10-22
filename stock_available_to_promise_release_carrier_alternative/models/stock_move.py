@@ -40,7 +40,8 @@ class StockMove(models.Model):
             # shipping weight only for the released moves
             moves = self.browse().union(*moves_list)
             with self.env.cr.savepoint() as savepoint:
-                if moves != picking.move_ids:
+                already_released_moves = picking.move_ids.filtered(lambda move: not move.need_release)
+                if moves != picking.move_ids - already_released_moves:
                     moves._unreleased_to_backorder()
                     picking = moves.picking_id
                 # If a better carrier is found, assign it, otherwise rollback

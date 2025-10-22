@@ -21,7 +21,7 @@ class StockQuant(models.Model):
         # _update_reserved_quantity and _get_available_quantity methods
         # in product_expiry module to later generate a domain skipping expired
         # quants during reservation in stock module.
-        if self.env.company.ignore_expiration_date or self.env.context.get(
+        if self.env.company.product_ignore_expiration_date or self.env.context.get(
             "ignore_expiration_date"
         ):
             self = self.with_context(with_expiration=False)

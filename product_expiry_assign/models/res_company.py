@@ -7,4 +7,4 @@ from odoo import fields, models
 class ResCompany(models.Model):
     _inherit = "res.company"
 
-    ignore_expiration_date = fields.Boolean(default=False)
+    product_ignore_expiration_date = fields.Boolean(default=False)

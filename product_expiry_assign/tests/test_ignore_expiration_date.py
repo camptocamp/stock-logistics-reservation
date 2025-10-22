@@ -60,7 +60,7 @@ class TestIgnoreExpirationDate(TransactionCase):
         self.move_out._action_confirm()
         self.move_out._action_assign()
         self.assertEqual(self.move_out.state, "confirmed")
-        self.move_out.company_id.ignore_expiration_date = True
+        self.move_out.company_id.product_ignore_expiration_date = True
         self.move_out._action_assign()
         self.assertEqual(self.move_out.state, "assigned")
 

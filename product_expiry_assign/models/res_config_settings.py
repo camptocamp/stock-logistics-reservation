@@ -7,6 +7,6 @@ from odoo import fields, models
 class ResConfigSettings(models.TransientModel):
     _inherit = "res.config.settings"
 
-    ignore_expiration_date = fields.Boolean(
-        related="company_id.ignore_expiration_date", readonly=False
+    product_ignore_expiration_date = fields.Boolean(
+        related="company_id.product_ignore_expiration_date", readonly=False
     )

@@ -10,11 +10,11 @@
             <field name="module_product_expiry" position="after">
                 <div class="row mt-2" invisible="not group_stock_production_lot">
                     <field
-                        name="ignore_expiration_date"
+                        name="product_ignore_expiration_date"
                         class="col flex-grow-0 ml16 mr0 pe-2"
                     />
                     <div class="col ps-0">
-                        <label for="ignore_expiration_date" />
+                        <label for="product_ignore_expiration_date" />
                         <div
                             class="text-muted"
                         >Force the reservation of expired lots.</div>

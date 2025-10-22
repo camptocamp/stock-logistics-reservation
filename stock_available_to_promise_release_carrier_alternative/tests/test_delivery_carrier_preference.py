@@ -82,3 +82,34 @@ class TestSaleDeliveryCarrierPreference(DeliveryCarrierPreferenceCommon):
         # A backorder should be created.
         delivery_pick.release_available_to_promise()
         self.assertTrue(delivery_pick.backorder_id)
+
+    def test_delivery_release_unrelease_keep_same_carrier(self):
+        """Check releasing/unreleasing moves and carrier is consistent.
+
+        A delivery with 2 products, one heavy, one light.
+        Releasing everything
+            -> carrier is The Post.
+        Unreleasing the light product and releasing it again
+            -> the light product should be added to the existing
+               heavy delivery and not to a new light delivery
+               carrier.
+        """
+        self.env["stock.quant"]._update_available_quantity(
+            self.product1, self.loc_stock, 3
+        )
+        self.env["stock.quant"]._update_available_quantity(
+            self.product2, self.loc_stock, 2
+        )
+        delivery_pick = self._create_out_picking(
+            product_qty=[(self.product1, 3), (self.product2, 2)], carrier=self.super_fast_carrier
+        )
+        delivery_pick.release_available_to_promise()
+        self.assertEqual(delivery_pick.carrier_id, self.the_poste_carrier)
+        self.assertEqual(delivery_pick.group_id.carrier_id, self.the_poste_carrier)
+        move_light = delivery_pick.move_ids.filtered(lambda move:move.product_id == self.product2)
+        move_light.unrelease()
+        res = move_light.release_available_to_promise()
+        delivery_2 = res.picking_id.filtered(lambda pick: pick.picking_type_id.code == "outgoing")
+        self.assertTrue(delivery_2)
+        self.assertEqual(delivery_2, delivery_pick)
+        self.assertEqual(delivery_2.carrier_id, self.the_poste_carrier)

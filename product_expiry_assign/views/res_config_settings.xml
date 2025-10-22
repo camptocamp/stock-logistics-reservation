@@ -2,15 +2,12 @@
 <!-- Copyright 2025 Camptocamp SA
      License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl). -->
 <odoo>
-    <record id="res_config_settings_view_form_stock" model="ir.ui.view">
+    <record id="res_config_settings_view_form" model="ir.ui.view">
         <field name="name">res.config.settings.form.inherit</field>
         <field name="model">res.config.settings</field>
-        <field
-            name="inherit_id"
-            ref="product_expiry.res_config_settings_view_form_stock"
-        />
+        <field name="inherit_id" ref="stock.res_config_settings_view_form" />
         <field name="arch" type="xml">
-            <setting id="group_expiry_date_on_delivery_slip" position="inside">
+            <field name="module_product_expiry" position="after">
                 <div class="row mt-2" invisible="not group_stock_production_lot">
                     <field
                         name="ignore_expiration_date"
@@ -23,7 +20,7 @@
                         >Force the reservation of expired lots.</div>
                     </div>
                 </div>
-            </setting>
+            </field>
         </field>
     </record>
 </odoo>

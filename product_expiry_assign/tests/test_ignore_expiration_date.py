@@ -54,15 +54,13 @@ class TestIgnoreExpirationDate(TransactionCase):
             }
         )
 
-    def test_config_parameter_ignore_expiration_date(self):
-        """Force reservation of expired lots with the system parameter."""
+    def test_company_ignore_expiration_date(self):
+        """Force reservation of expired lots with the company parameter."""
         self.move_out = self._create_move_out(self.product, qty=10)
         self.move_out._action_confirm()
         self.move_out._action_assign()
         self.assertEqual(self.move_out.state, "confirmed")
-        self.env["ir.config_parameter"].set_param(
-            "product_expiry_assign.ignore_expiration_date", 1
-        )
+        self.move_out.company_id.ignore_expiration_date = True
         self.move_out._action_assign()
         self.assertEqual(self.move_out.state, "assigned")
 

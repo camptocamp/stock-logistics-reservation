@@ -8,5 +8,5 @@ class ResConfigSettings(models.TransientModel):
     _inherit = "res.config.settings"
 
     ignore_expiration_date = fields.Boolean(
-        config_parameter="product_expiry_assign.ignore_expiration_date",
+        related="company_id.ignore_expiration_date", readonly=False
     )

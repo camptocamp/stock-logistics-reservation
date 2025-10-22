@@ -2,7 +2,6 @@
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl)
 
 from odoo import models
-from odoo.tools import str2bool
 
 
 class StockQuant(models.Model):
@@ -22,12 +21,9 @@ class StockQuant(models.Model):
         # _update_reserved_quantity and _get_available_quantity methods
         # in product_expiry module to later generate a domain skipping expired
         # quants during reservation in stock module.
-        ignore_expiration_date = str2bool(
-            self.env["ir.config_parameter"]
-            .sudo()
-            .get_param("product_expiry_assign.ignore_expiration_date")
-        )
-        if ignore_expiration_date or self.env.context.get("ignore_expiration_date"):
+        if self.env.company.ignore_expiration_date or self.env.context.get(
+            "ignore_expiration_date"
+        ):
             self = self.with_context(with_expiration=False)
         return super()._get_gather_domain(
             product_id,

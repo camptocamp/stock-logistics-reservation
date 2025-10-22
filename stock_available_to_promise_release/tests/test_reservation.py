@@ -918,8 +918,8 @@ class TestAvailableToPromiseRelease(PromiseReleaseCommonCase):
         self.assertRecordValues(
             out_picking.move_ids.filtered(lambda m: m.state != "cancel"),
             [
-                {"product_qty": 10.0, "product_id": self.product2.id},
                 {"product_qty": 10.0, "product_id": self.product1.id},
+                {"product_qty": 10.0, "product_id": self.product2.id},
             ],
         )
 

@@ -35,7 +35,9 @@ class StockPicking(models.Model):
         # but I disagree because current carrier could be the best match,
         # and I guess we do not want to force another carrier in such case.
         # see https://github.com/OCA/stock-logistics-reservation/pull/17#discussion_r2215062326
+        # FIXME  Should the first default carrier not be kept on the record ?
         possible_carriers = picking_carrier.alternative_carrier_ids
+        possible_carriers |= picking_carrier
         for carrier in possible_carriers.sorted("sequence"):
             if carrier._match_picking(self):
                 return carrier

@@ -558,6 +558,7 @@ class StockMove(models.Model):
         unreleased_moves_to_bo = unreleased_moves.filtered(
             lambda m: m.state not in ("done", "cancel")
             and not m.rule_id.no_backorder_at_release
+            and m.need_release
         )
         if unreleased_moves_to_bo:
             unreleased_moves_to_bo._unreleased_to_backorder()
@@ -580,7 +581,6 @@ class StockMove(models.Model):
                 )
             )
         self.env["procurement.group"].run_defer(procurement_requests)
-
         assigned_moves = released_moves._after_release_assign_moves()
         assigned_moves._after_release_update_chain()
 

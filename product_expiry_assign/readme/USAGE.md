@@ -1,4 +1,13 @@
-This module allows to do so by setting a context key to force the reservation of expired lots.
+This module allows to force the reservation of expired lots with:
+
+- a configuration option (at the company level)
+- a context key
+
+## Configuration option (global)
+
+Open Inventory settings (*Inventory/Configuration/Settings*), section *Traceability*, and enable option *Ignore Expiration Date*.
+
+## With context key (code)
 
 Before calling `<stock.move>._action_confirm()` or `<stock.move>._action_assign()`,
 one could set the `ignore_expiration_date` context key:

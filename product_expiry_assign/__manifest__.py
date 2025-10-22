@@ -9,7 +9,7 @@
     "category": "Inventory/Inventory",
     "website": "https://github.com/OCA/stock-logistics-reservation",
     "depends": ["product_expiry"],
-    "data": [],
+    "data": ["views/res_config_settings.xml"],
     "installable": True,
     "license": "AGPL-3",
     "application": False,

@@ -131,11 +131,18 @@ class StockPicking(models.Model):
         }
         self.move_ids.with_context(**context).release_available_to_promise()
 
-    def _release_link_backorder(self, origin_picking):
+    def _release_link_backorder(self, origin_picking, split_order=False):
         self.backorder_id = origin_picking
         origin_picking.message_post(
             body=self.env._("The backorder %s has been created.", self._get_html_link())
         )
+        if split_order:
+            self.message_post(
+                body=self.env._(
+                    "The split order %s has been created.",
+                    origin_picking._get_html_link(),
+                )
+            )
 
     def _after_release_update_chain(self):
         """Called after the moves are released

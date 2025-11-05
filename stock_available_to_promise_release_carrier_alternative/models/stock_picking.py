@@ -1,6 +1,6 @@
 # Copyright 2025 Camptocamp SA
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl)
-from odoo import Command, models
+from odoo import models
 
 
 class StockPicking(models.Model):
@@ -43,7 +43,6 @@ class StockPicking(models.Model):
                 {
                     "location_id": rule.location_src_id.id,
                     "rule_id": rule.id,
-                    "route_ids": [Command.link(rule.route_id.id)],
                     "picking_type_id": rule.picking_type_id.id,
                     "procure_method": rule.procure_method,
                     "propagate_cancel": rule.propagate_cancel,

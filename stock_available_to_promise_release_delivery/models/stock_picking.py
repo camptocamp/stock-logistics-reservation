@@ -15,14 +15,10 @@ class StockPicking(models.Model):
             # This is only needed for Odoo 17.0+, allowing to set routes on carriers.
             orig_carriers = {rec: rec.carrier_id for rec in self}
             res = super().write(vals)
-            pickings_updated_ids = []
             for picking in self:
-                # Skip if carrier didn't changed
+                # Update routes only when carrier has changed
                 if picking.carrier_id != orig_carriers[picking]:
-                    pickings_updated_ids.append(picking.id)
-            pickings_updated = self.browse(pickings_updated_ids)
-            for picking in pickings_updated:
-                picking._update_moves_with_carrier_routes()
+                    picking._update_moves_with_carrier_routes()
             return res
         return super().write(vals)
 

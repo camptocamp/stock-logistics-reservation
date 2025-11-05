@@ -8,7 +8,8 @@ class StockPicking(models.Model):
     _inherit = "stock.picking"
 
     def write(self, vals):
-        if vals.get("carrier_id"):
+        skip_update_carrier_routes = self.env.context.get("skip_update_carrier_routes")
+        if vals.get("carrier_id") and not skip_update_carrier_routes:
             # Update stock rules on moves when carrier is changed on transfers
             # not yet released.
             # This is only needed for Odoo 17.0+, allowing to set routes on carriers.
@@ -16,36 +17,47 @@ class StockPicking(models.Model):
             res = super().write(vals)
             pickings_updated_ids = []
             for picking in self:
-                # Skip assigned pickings
-                if picking.state in ("assigned", "partially_available"):
-                    continue
                 # Skip if carrier didn't changed
                 if picking.carrier_id != orig_carriers[picking]:
                     pickings_updated_ids.append(picking.id)
             pickings_updated = self.browse(pickings_updated_ids)
-            pickings_updated._sync_moves_with_carrier_routes()
+            for picking in pickings_updated:
+                picking._update_moves_with_carrier_routes()
             return res
         return super().write(vals)
 
-    def _sync_moves_with_carrier_routes(self):
+    def _update_moves_with_carrier_routes(self):
         """Update stock rules on transfer's moves based on new carrier's routes."""
-        for picking in self:
-            # Skip if transfer is already released
-            if not picking.need_release:
-                continue
-            # Skip if no route is set on the new carrier
-            routes = picking.carrier_id.route_ids.filtered("active")
-            if not routes:
-                continue
-            rule = self.env["procurement.group"]._get_rule(
-                self.env["product.product"],
-                self.location_dest_id,
-                {"route_ids": routes},
+        self.ensure_one()
+        # Skip if transfer is already released
+        if not self.need_release:
+            return self.env["stock.move"]
+        # Set a context key to not trigger a carrier change on the
+        # procurement group
+        defaults = {
+            "carrier_id": self.carrier_id.id,
+            "name": self.env._(
+                "%s - Alternative carrier %s", self.group_id.name, self.carrier_id.name
+            ),
+        }
+        self.group_id = self.group_id.copy(default=defaults)
+        active_moves = self.move_ids.filtered(
+            lambda m: m.state not in ("done", "cancel")
+        )
+        active_moves.group_id = self.group_id
+        # Manage the carrier route
+        if (
+            (rerouted_moves := active_moves.filtered(lambda m: not m.route_ids))
+            and (routes := self.carrier_id.route_ids.filtered("active"))
+            and (
+                rule := self.env["procurement.group"]._get_rule(
+                    self.env["product.product"],
+                    self.location_dest_id,
+                    {"route_ids": routes},
+                )
             )
-            if not rule:
-                # FIXME raise an error if no rule can be found for that carrier route?
-                continue
-            picking.move_ids.write(
+        ):
+            rerouted_moves.write(
                 {
                     "location_id": rule.location_src_id.id,
                     "rule_id": rule.id,
@@ -55,3 +67,5 @@ class StockPicking(models.Model):
                     "propagate_cancel": rule.propagate_cancel,
                 }
             )
+            return rerouted_moves
+        return self.env["stock.move"]

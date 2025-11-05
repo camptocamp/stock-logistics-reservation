@@ -10,7 +10,7 @@
     "license": "LGPL-3",
     "application": False,
     "installable": True,
-    "auto_install": True,
+    "auto_install": False,
     "depends": [
         "stock_delivery",
         "stock_available_to_promise_release",

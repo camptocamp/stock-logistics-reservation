@@ -60,19 +60,31 @@ class SaleOrderLine(models.Model):
         # Fallback values
         availability_status = "no"
         expected_availability_date = False
+        # Get availabile qty as sale order line's UOM.
         available_qty = 0
         for move in self.move_ids:
             if move.state == "cancel":
                 continue
+            # INFO: If needs release, setting is enabled, and available_qty
+            # is move.ordered_available_to_promise_uom_qty
             if move.need_release:
-                available_qty += self.product_uom._compute_quantity(
+                available_qty += move.product_uom._compute_quantity(
                     move.ordered_available_to_promise_uom_qty,
-                    product.uom_id,
+                    self.product_uom,
                     rounding_method="HALF-UP",
                 )
+            # INFO: If picking was released, then release is enabled, therefore
+            # a backorder was created for whatever wasn't available at release.
+            # in such case, available_qty == move.product_uom_qty
+            elif move.picking_id.last_release_date:
+                available_qty += move.product_uom._compute_quantity(
+                    move.product_uom_qty, self.product_uom, rounding_method="HALF-UP"
+                )
+            # INFO: If picking doesn't need release, and was never released, then
+            # setting is disabled. Therefore, available_qty is move.quantity
             else:
-                available_qty += self.product_uom._compute_quantity(
-                    move.quantity, move.product_uom, rounding_method="HALF-UP"
+                available_qty += move.product_uom._compute_quantity(
+                    move.quantity, self.product_uom, rounding_method="HALF-UP"
                 )
         delayed_qty = 0
         # required values

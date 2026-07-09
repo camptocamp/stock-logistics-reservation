@@ -56,15 +56,27 @@ class SaleOrderLine(models.Model):
             data["availability_status"] = "full"
             data["available_qty"] = self.product_uom_qty
             return data
+        product = self.product_id
         # Fallback values
         availability_status = "no"
         expected_availability_date = False
-        available_qty = sum(
-            self.mapped("move_ids.ordered_available_to_promise_uom_qty")
-        )
+        # Get availabile qty as sale order line's UOM.
+        available_qty = 0
+        for move in self.move_ids:
+            if move.state == "cancel":
+                continue
+            if move.need_release:
+                available_qty += move.product_uom._compute_quantity(
+                    move.ordered_available_to_promise_uom_qty,
+                    self.product_uom,
+                    rounding_method="HALF-UP",
+                )
+            else:
+                available_qty += move.product_uom._compute_quantity(
+                    move.product_uom_qty, self.product_uom, rounding_method="HALF-UP"
+                )
         delayed_qty = 0
         # required values
-        product = self.product_id
         rounding = product.uom_id.rounding
         # Fully available
         if (

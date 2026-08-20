@@ -27,7 +27,7 @@ Available addons
 addon | version | maintainers | summary
 --- | --- | --- | ---
 [product_expiry_assign](product_expiry_assign/) | 18.0.1.0.0 |  | Force the reservation of expired lots.
-[sale_stock_available_to_promise_release](sale_stock_available_to_promise_release/) | 18.0.2.0.0 |  | Integration between Sales and Available to Promise Release
+[sale_stock_available_to_promise_release](sale_stock_available_to_promise_release/) | 18.0.2.0.1 |  | Integration between Sales and Available to Promise Release
 [sale_stock_available_to_promise_release_dropshipping](sale_stock_available_to_promise_release_dropshipping/) | 18.0.1.0.0 |  | Glue module between sale_stock_available_to_promise_release and stock_dropshipping
 [stock_available_to_promise_release](stock_available_to_promise_release/) | 18.0.1.7.0 |  | Release Operations based on available to promise
 [stock_available_to_promise_release_carrier_alternative](stock_available_to_promise_release_carrier_alternative/) | 18.0.1.0.1 |  | Advanced selection of preferred shipping methods
@@ -36,8 +36,9 @@ addon | version | maintainers | summary
 [stock_available_to_promise_release_exclude_location](stock_available_to_promise_release_exclude_location/) | 18.0.1.0.0 |  | Exclude locations from available stock
 [stock_move_auto_assign](stock_move_auto_assign/) | 18.0.1.0.1 |  | Try to reserve moves when goods enter in a location
 [stock_picking_unreserve_button](stock_picking_unreserve_button/) | 18.0.1.0.0 |  | Stock Picking Unreserve Button
+[stock_quant_manual_assign](stock_quant_manual_assign/) | 18.0.1.1.1 |  | Stock - Manual Quant Assignment
 [stock_reserve](stock_reserve/) | 18.0.1.0.0 |  | Stock reservations on products
-[stock_reserve_rule](stock_reserve_rule/) | 18.0.1.2.1 |  | Configure reservation rules by location
+[stock_reserve_rule](stock_reserve_rule/) | 18.0.1.2.2 | <a href='https://github.com/jbaudoux'><img src='https://github.com/jbaudoux.png' width='32' height='32' style='border-radius:50%;' alt='jbaudoux'/></a> | Configure reservation rules by location
 [stock_rule_reserve_max_quantity](stock_rule_reserve_max_quantity/) | 18.0.1.0.1 | <a href='https://github.com/Shide'><img src='https://github.com/Shide.png' width='32' height='32' style='border-radius:50%;' alt='Shide'/></a> <a href='https://github.com/rafaelbn'><img src='https://github.com/rafaelbn.png' width='32' height='32' style='border-radius:50%;' alt='rafaelbn'/></a> | Allows to reserve max available quantity when a move comes from an stock rule
 
 [//]: # (end addons)

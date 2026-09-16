@@ -7,13 +7,13 @@ An extension module defining the zones differently overrides one hook on
 `stock.move.line` and delegates the decision back:
 
 ```python
-def _zone_in_date_to_propagate(self, location):
-    return self._zone_in_date_between(<source zone>, <destination zone>)
+def _is_zone_changed(self, location):
+    return location._compare_zones(<source zone>, <destination zone>)
 ```
 
-`_zone_in_date_between` keeps the date when both zones are the same, and returns
-the current datetime when the goods enter another zone. It also keeps the date
-when the destination is in no zone, unless the company setting
+`stock.location._compare_zones` answers `False` when both zones are the same, so the goods keep
+their date, and `True` when they enter another zone, so the date is reset. A
+destination in no zone answers `False` too, unless the company setting
 `zone_in_date_reset_out_of_zone` is on.
 
 When the destination location already holds stock, the returned date competes

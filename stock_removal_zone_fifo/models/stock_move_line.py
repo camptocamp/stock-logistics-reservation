@@ -10,14 +10,15 @@ class StockMoveLine(models.Model):
     def _synchronize_quant(
         self, quantity, location, action="available", in_date=False, **quants_value
     ):
-        # A positive available quantity is the leg putting the goods down. Read
-        # the date stored there first, as the leg may create the quant.
+        # a negative quantity takes goods out of `location`, a positive one
+        # puts goods in it
         put_down = action == "available" and quantity > 0
-        previous_dates = (
-            self._zone_quants(location, **quants_value).mapped("zone_in_date")
-            if put_down
-            else []
-        )
+        if put_down:
+            # super() creates the quant when `location` holds none yet, and
+            # afterwards nothing tells that quant from an older one
+            previous_dates = self._zone_quants(location, **quants_value).mapped(
+                "zone_in_date"
+            )
         res = super()._synchronize_quant(
             quantity, location, action=action, in_date=in_date, **quants_value
         )
@@ -27,29 +28,22 @@ class StockMoveLine(models.Model):
 
     def _apply_zone_in_date(self, location, previous_dates, **quants_value):
         self.ensure_one()
-        zone_in_date = self._zone_in_date_to_propagate(location)
+        if self._is_zone_changed(location):
+            zone_in_date = fields.Datetime.now()
+        else:
+            zone_in_date = self._source_zone_in_date()
         if not zone_in_date:
             return
-        # Oldest wins, as the core does for in_date: arriving goods never push
-        # the ones already there back in the queue.
+        # oldest wins, same as for in_date
         zone_in_date = min([zone_in_date] + previous_dates)
         self._zone_quants(location, **quants_value).zone_in_date = zone_in_date
 
-    def _zone_in_date_to_propagate(self, location):
-        """Hook: zone entry date the goods get in ``location``. Override to
-        define the zones another way."""
-        return self._zone_in_date_between(
+    def _is_zone_changed(self, location):
+        """Hook: do the goods enter another zone by moving to ``location``?
+        Override to define the zones another way."""
+        return location._compare_zones(
             self.location_id._get_zone_location(), location._get_zone_location()
         )
-
-    def _zone_in_date_between(self, source_zone, destination_zone):
-        if source_zone == destination_zone:
-            return self._source_zone_in_date()
-        if not destination_zone and not self.env.company.zone_in_date_reset_out_of_zone:
-            # Out of every zone, so no zone-based strategy sorts the goods
-            # there and their date can be left as it is.
-            return self._source_zone_in_date()
-        return fields.Datetime.now()
 
     def _source_zone_in_date(self):
         """Zone entry date of the quant the goods were taken from. Still

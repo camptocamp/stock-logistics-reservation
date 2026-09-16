@@ -12,6 +12,17 @@ class StockLocation(models.Model):
         # Extended by the modules adding another zone-based strategy.
         return ["zone_fifo"]
 
+    @api.model
+    def _compare_zones(self, source_zone, destination_zone):
+        """Do goods moved from ``source_zone`` to ``destination_zone`` enter
+        another zone?"""
+        if source_zone == destination_zone:
+            return False
+        if not destination_zone:
+            # out of every zone, so no zone-based strategy sorts the goods there
+            return self.env.company.zone_in_date_reset_out_of_zone
+        return True
+
     def _get_zone_location(self):
         """Nearest ancestor, self included, whose removal strategy defines a
         zone. Empty when no ancestor carries one."""

@@ -7,12 +7,11 @@ from odoo import models
 class StockMoveLine(models.Model):
     _inherit = "stock.move.line"
 
-    def _zone_in_date_to_propagate(self, location):
+    def _is_zone_changed(self, location):
         source_zone = self.location_id.zone_location_id
         destination_zone = location.zone_location_id
         if not source_zone and not destination_zone:
-            # No location flagged as a zone around either side, so keep the
-            # zones defined by the removal strategy of an ancestor location.
-            return super()._zone_in_date_to_propagate(location)
-        # Replaces that definition with the one of stock_location_zone.
-        return self._zone_in_date_between(source_zone, destination_zone)
+            # no location flagged as a zone on either side, so keep the zones
+            # defined by the removal strategy of an ancestor location
+            return super()._is_zone_changed(location)
+        return location._compare_zones(source_zone, destination_zone)

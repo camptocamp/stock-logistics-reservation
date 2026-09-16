@@ -36,6 +36,10 @@ class ZoneFifoCommon(BaseCommon):
         # Each of these two locations carries the strategy, so each is a zone.
         # stock_loc stays without one, which leaves loc_outside in no zone.
         (cls.zone_a | cls.zone_b).write({"removal_strategy_id": cls.zone_fifo.id})
+        if "is_zone" in Location._fields:
+            # stock_removal_zone_fifo_location_zone may be installed, and it
+            # then governs the zones. Keep both definitions in agreement.
+            (cls.zone_a | cls.zone_b).write({"is_zone": True})
 
         # On the category, so a reservation over the whole stock sorts with the
         # strategy whatever the bin the goods sit in.

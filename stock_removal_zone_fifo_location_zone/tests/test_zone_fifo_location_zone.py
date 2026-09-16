@@ -12,19 +12,13 @@ class TestZoneFifoLocationZone(ZoneFifoCommon):
         super().setUpClass()
         (cls.zone_a | cls.zone_b).write({"is_zone": True})
 
-    def test_unflagged_locations_keep_the_strategy_zones(self):
-        """Flagging no zone at all must not disable Zone-Level FIFO."""
+    def test_unflagged_locations_are_in_no_zone(self):
+        """This module takes the definition over, so the removal strategy of an
+        ancestor no longer draws a zone."""
         (self.zone_a | self.zone_b).write({"is_zone": False})
-        self._make_quant(
-            self.bin_a1,
-            10,
-            in_date="2026-01-01 08:00:00",
-            zone_in_date="2026-02-01 08:00:00",
-        )
-        self._move(self.bin_a1, self.bin_a2, 10)
-        self.assertEqual(
-            self._quant(self.bin_a2).zone_in_date, self._dt("2026-02-01 08:00:00")
-        )
+        self.assertTrue(self.zone_a.removal_strategy_id)
+        self.assertFalse(self.bin_a1._get_zone_location())
+        self.assertFalse(self.bin_b1._get_zone_location())
 
     def test_zones_are_wired(self):
         self.assertEqual(self.bin_a1.zone_location_id, self.zone_a)

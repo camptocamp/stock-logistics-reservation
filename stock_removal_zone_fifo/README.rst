@@ -82,18 +82,19 @@ it, and ``_zone_removal_strategies()`` lists the strategy methods that
 define one — a module adding another zone-based strategy extends that
 list.
 
-An extension module defining the zones differently overrides one hook on
-``stock.move.line`` and delegates the decision back:
+An extension module defining the zones differently overrides
+``_get_zone_location`` on ``stock.location``:
 
 .. code:: python
 
-   def _zone_in_date_to_propagate(self, location):
-       return self._zone_in_date_between(<source zone>, <destination zone>)
+   def _get_zone_location(self):
+       return <the zone of this location> or super()._get_zone_location()
 
-``_zone_in_date_between`` keeps the date when both zones are the same,
-and returns the current datetime when the goods enter another zone. It
-also keeps the date when the destination is in no zone, unless the
-company setting ``zone_in_date_reset_out_of_zone`` is on.
+``stock.location._is_same_zone(source_zone, destination_zone)`` decides
+what counts as staying put: ``True`` keeps the date of the goods,
+``False`` resets it. A destination in no zone answers ``True``, unless
+the company setting ``zone_in_date_reset_out_of_zone`` is on. Override
+it to change that rule.
 
 When the destination location already holds stock, the returned date
 competes with the one already stored and the oldest of the two wins, so

@@ -13,15 +13,15 @@ class StockLocation(models.Model):
         return ["zone_fifo"]
 
     @api.model
-    def _compare_zones(self, source_zone, destination_zone):
-        """Do goods moved from ``source_zone`` to ``destination_zone`` enter
-        another zone?"""
+    def _is_same_zone(self, source_zone, destination_zone):
+        """Tell whether both zones are the same one. An empty destination zone is
+        the exception: it is True unless zone_in_date_reset_out_of_zone is set."""
         if source_zone == destination_zone:
-            return False
+            return True
         if not destination_zone:
             # out of every zone, so no zone-based strategy sorts the goods there
-            return self.env.company.zone_in_date_reset_out_of_zone
-        return True
+            return not self.env.company.zone_in_date_reset_out_of_zone
+        return False
 
     def _get_zone_location(self):
         """Nearest ancestor, self included, whose removal strategy defines a

@@ -373,15 +373,15 @@ ul.auto-toc {
 <p>Glue module between <tt class="docutils literal">stock_removal_zone_fifo</tt> and
 <tt class="docutils literal">stock_location_zone</tt>, installed automatically when both are.</p>
 <p><tt class="docutils literal">stock_removal_zone_fifo</tt> takes a zone to be the nearest ancestor
-location carrying the Zone-Level FIFO strategy. This module replaces
-that definition with the zones of <tt class="docutils literal">stock_location_zone</tt>, so the goods
-keep their zone entry date while they stay under the same location
-flagged <tt class="docutils literal">Is a Zone Location?</tt>.</p>
+location carrying the Zone-Level FIFO strategy. This module overrides
+<tt class="docutils literal">stock.location._get_zone_location</tt> to use the zones of
+<tt class="docutils literal">stock_location_zone</tt> instead, so the goods keep their zone entry date
+while they stay under the same location flagged <tt class="docutils literal">Is a Zone Location?</tt>.</p>
 <p>Install it when the zones of your warehouse do not line up with the
-locations you set the removal strategy on. Moves with no location
-flagged <tt class="docutils literal">Is a Zone Location?</tt> on either side keep the definition of
-<tt class="docutils literal">stock_removal_zone_fifo</tt>, so installing this module without flagging
-any zone changes nothing.</p>
+locations you set the removal strategy on. It takes the definition over
+entirely: a location under nothing flagged <tt class="docutils literal">Is a Zone Location?</tt> is
+then in no zone, whatever removal strategy its ancestors carry. Flag
+your zones before installing it.</p>
 <p><strong>Table of contents</strong></p>
 <div class="contents local topic" id="contents">
 <ul class="simple">

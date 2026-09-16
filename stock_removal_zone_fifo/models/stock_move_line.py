@@ -22,28 +22,21 @@ class StockMoveLine(models.Model):
         res = super()._synchronize_quant(
             quantity, location, action=action, in_date=in_date, **quants_value
         )
-        if put_down:
-            self._apply_zone_in_date(location, previous_dates, **quants_value)
-        return res
+        if not put_down:
+            return res
 
-    def _apply_zone_in_date(self, location, previous_dates, **quants_value):
-        self.ensure_one()
-        if self._is_zone_changed(location):
-            zone_in_date = fields.Datetime.now()
-        else:
-            zone_in_date = self._source_zone_in_date()
-        if not zone_in_date:
-            return
-        # oldest wins, same as for in_date
-        zone_in_date = min([zone_in_date] + previous_dates)
-        self._zone_quants(location, **quants_value).zone_in_date = zone_in_date
-
-    def _is_zone_changed(self, location):
-        """Hook: do the goods enter another zone by moving to ``location``?
-        Override to define the zones another way."""
-        return location._compare_zones(
+        same_zone = location._is_same_zone(
             self.location_id._get_zone_location(), location._get_zone_location()
         )
+        if same_zone:
+            zone_in_date = self._source_zone_in_date()
+        else:
+            zone_in_date = fields.Datetime.now()
+        if zone_in_date:
+            # oldest wins, same as for in_date
+            zone_in_date = min([zone_in_date] + previous_dates)
+            self._zone_quants(location, **quants_value).zone_in_date = zone_in_date
+        return res
 
     def _source_zone_in_date(self):
         """Zone entry date of the quant the goods were taken from. Still

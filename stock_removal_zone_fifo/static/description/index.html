@@ -424,16 +424,17 @@ strategy is zone-based. <tt class="docutils literal">stock.location._get_zone_lo
 it, and <tt class="docutils literal">_zone_removal_strategies()</tt> lists the strategy methods that
 define one — a module adding another zone-based strategy extends that
 list.</p>
-<p>An extension module defining the zones differently overrides one hook on
-<tt class="docutils literal">stock.move.line</tt> and delegates the decision back:</p>
+<p>An extension module defining the zones differently overrides
+<tt class="docutils literal">_get_zone_location</tt> on <tt class="docutils literal">stock.location</tt>:</p>
 <pre class="code python literal-block">
-<span class="k">def</span><span class="w"> </span><span class="nf">_zone_in_date_to_propagate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">location</span><span class="p">):</span><span class="w">
-</span>    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_zone_in_date_between</span><span class="p">(</span><span class="o">&lt;</span><span class="n">source</span> <span class="n">zone</span><span class="o">&gt;</span><span class="p">,</span> <span class="o">&lt;</span><span class="n">destination</span> <span class="n">zone</span><span class="o">&gt;</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_zone_location</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span><span class="w">
+</span>    <span class="k">return</span> <span class="o">&lt;</span><span class="n">the</span> <span class="n">zone</span> <span class="n">of</span> <span class="n">this</span> <span class="n">location</span><span class="o">&gt;</span> <span class="ow">or</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_get_zone_location</span><span class="p">()</span>
 </pre>
-<p><tt class="docutils literal">_zone_in_date_between</tt> keeps the date when both zones are the same,
-and returns the current datetime when the goods enter another zone. It
-also keeps the date when the destination is in no zone, unless the
-company setting <tt class="docutils literal">zone_in_date_reset_out_of_zone</tt> is on.</p>
+<p><tt class="docutils literal">stock.location._is_same_zone(source_zone, destination_zone)</tt> decides
+what counts as staying put: <tt class="docutils literal">True</tt> keeps the date of the goods,
+<tt class="docutils literal">False</tt> resets it. A destination in no zone answers <tt class="docutils literal">True</tt>, unless
+the company setting <tt class="docutils literal">zone_in_date_reset_out_of_zone</tt> is on. Override
+it to change that rule.</p>
 <p>When the destination location already holds stock, the returned date
 competes with the one already stored and the oldest of the two wins, so
 arriving goods never push the ones already there back in the queue. This

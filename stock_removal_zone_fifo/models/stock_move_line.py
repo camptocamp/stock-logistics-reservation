@@ -1,7 +1,7 @@
 # Copyright 2026 Camptocamp SA
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
-from odoo import models
+from odoo import fields, models
 
 
 class StockMoveLine(models.Model):
@@ -36,9 +36,20 @@ class StockMoveLine(models.Model):
         self._zone_quants(location, **quants_value).zone_in_date = zone_in_date
 
     def _zone_in_date_to_propagate(self, location):
-        """Hook: zone entry date the goods get in ``location``, or False to keep
-        the one the core propagated. See the DEVELOP section of the README."""
-        return False
+        """Hook: zone entry date the goods get in ``location``. Override to
+        define the zones another way."""
+        return self._zone_in_date_between(
+            self.location_id._get_zone_location(), location._get_zone_location()
+        )
+
+    def _zone_in_date_between(self, source_zone, destination_zone):
+        if source_zone == destination_zone:
+            return self._source_zone_in_date()
+        if not destination_zone and not self.env.company.zone_in_date_reset_out_of_zone:
+            # Out of every zone, so no zone-based strategy sorts the goods
+            # there and their date can be left as it is.
+            return self._source_zone_in_date()
+        return fields.Datetime.now()
 
     def _source_zone_in_date(self):
         """Zone entry date of the quant the goods were taken from. Still

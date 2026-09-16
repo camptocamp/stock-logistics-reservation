@@ -44,10 +44,10 @@ field on the quant, falling back on the incoming date:
 
    zone_in_date ASC, in_date ASC, id
 
-``zone_in_date`` is set when the goods are put down in a location and,
-unlike ``in_date``, it is never reset afterwards by a merge of stock or
-by an inventory adjustment. It is always set, so the sort above needs no
-NULL handling.
+``zone_in_date`` is reset only when the goods enter another zone, unlike
+``in_date`` which a merge of stock or an inventory adjustment can move.
+A zone is the nearest ancestor location carrying the strategy. It is
+always set, so the sort above needs no NULL handling.
 
 **Table of contents**
 
@@ -57,38 +57,43 @@ NULL handling.
 Usage
 =====
 
-Set ``Zone-Level FIFO`` as the removal strategy of a location, or of a
-product category.
+Set ``Zone-Level FIFO`` as the removal strategy of the parent location
+of each picking zone. That location *is* the zone: every location under
+it belongs to it, up to the next descendant carrying the strategy.
 
-On its own this module has no notion of what a zone is, so every move
-resets the zone entry date of the destination quant and the strategy
-behaves like the standard FIFO. Install an extension module defining the
-zones to make it useful, for instance
-``stock_removal_zone_fifo_location_zone``.
+Setting the strategy on a **product category** only chooses how the
+quants are sorted, it never defines a zone. A category-level Zone-Level
+FIFO is therefore pointless on its own: without the strategy on at least
+one location, no zone exists, ``zone_in_date`` is never updated and the
+sort falls back on ``in_date``. Use the category to apply the strategy
+warehouse-wide, and the locations to draw the zones.
+
+Goods moved to a location that is in no zone keep their zone entry date,
+since no zone sorts them there. Tick
+``Reset Zone Entry Date out of Zones`` in the Inventory settings to
+reset it instead.
 
 Development
 ===========
 
-An extension module teaches this one where the zones are by overriding a
-single hook on ``stock.move.line``:
+A zone is the nearest ancestor location, itself included, whose removal
+strategy is zone-based. ``stock.location._get_zone_location()`` resolves
+it, and ``_zone_removal_strategies()`` lists the strategy methods that
+define one — a module adding another zone-based strategy extends that
+list.
+
+An extension module defining the zones differently overrides one hook on
+``stock.move.line`` and delegates the decision back:
 
 .. code:: python
 
    def _zone_in_date_to_propagate(self, location):
-       """Zone entry date the goods get in ``location``, or False."""
-       if <location is in the same zone as self.location_id>:
-           # the goods were already in it, keep their date
-           return self._source_zone_in_date()
-       if <location is in a zone>:
-           # the goods arrive in it now
-           return fields.Datetime.now()
-       return super()._zone_in_date_to_propagate(location)
+       return self._zone_in_date_between(<source zone>, <destination zone>)
 
-``_source_zone_in_date()`` reads the date from the quant the goods were
-taken from. Returning ``False``, the default, changes nothing: the
-destination quant keeps the date the core gave it, which is the incoming
-date carried over from the source. That is why the strategy behaves like
-the standard FIFO as long as no extension module is installed.
+``_zone_in_date_between`` keeps the date when both zones are the same,
+and returns the current datetime when the goods enter another zone. It
+also keeps the date when the destination is in no zone, unless the
+company setting ``zone_in_date_reset_out_of_zone`` is on.
 
 When the destination location already holds stock, the returned date
 competes with the one already stored and the oldest of the two wins, so

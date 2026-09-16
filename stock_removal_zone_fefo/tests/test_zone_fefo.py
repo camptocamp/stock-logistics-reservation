@@ -8,9 +8,11 @@ class TestZoneFefo(ZoneFifoCommon):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.stock_loc.removal_strategy_id = cls.env.ref(
-            "stock_removal_zone_fefo.removal_zone_fefo"
-        )
+        zone_fefo = cls.env.ref("stock_removal_zone_fefo.removal_zone_fefo")
+        # The category wins over the locations when the strategy is resolved,
+        # so it has to carry Zone-Level FEFO too.
+        cls.categ.removal_strategy_id = zone_fefo
+        (cls.zone_a | cls.zone_b).write({"removal_strategy_id": zone_fefo.id})
         cls.product.write({"tracking": "lot", "use_expiration_date": True})
 
     @classmethod

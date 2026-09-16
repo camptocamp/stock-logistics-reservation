@@ -1,23 +1,20 @@
-An extension module teaches this one where the zones are by overriding a single
-hook on `stock.move.line`:
+A zone is the nearest ancestor location, itself included, whose removal strategy
+is zone-based. `stock.location._get_zone_location()` resolves it, and
+`_zone_removal_strategies()` lists the strategy methods that define one — a
+module adding another zone-based strategy extends that list.
+
+An extension module defining the zones differently overrides one hook on
+`stock.move.line` and delegates the decision back:
 
 ```python
 def _zone_in_date_to_propagate(self, location):
-    """Zone entry date the goods get in ``location``, or False."""
-    if <location is in the same zone as self.location_id>:
-        # the goods were already in it, keep their date
-        return self._source_zone_in_date()
-    if <location is in a zone>:
-        # the goods arrive in it now
-        return fields.Datetime.now()
-    return super()._zone_in_date_to_propagate(location)
+    return self._zone_in_date_between(<source zone>, <destination zone>)
 ```
 
-`_source_zone_in_date()` reads the date from the quant the goods were taken
-from. Returning `False`, the default, changes nothing: the destination quant
-keeps the date the core gave it, which is the incoming date carried over from
-the source. That is why the strategy behaves like the standard FIFO as long as
-no extension module is installed.
+`_zone_in_date_between` keeps the date when both zones are the same, and returns
+the current datetime when the goods enter another zone. It also keeps the date
+when the destination is in no zone, unless the company setting
+`zone_in_date_reset_out_of_zone` is on.
 
 When the destination location already holds stock, the returned date competes
 with the one already stored and the oldest of the two wins, so arriving goods

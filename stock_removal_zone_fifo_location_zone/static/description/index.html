@@ -372,14 +372,16 @@ ul.auto-toc {
 <p><a class="reference external image-reference" href="https://odoo-community.org/page/development-status"><img alt="Beta" src="https://img.shields.io/badge/maturity-Beta-yellow.png" /></a> <a class="reference external image-reference" href="http://www.gnu.org/licenses/agpl-3.0-standalone.html"><img alt="License: AGPL-3" src="https://img.shields.io/badge/licence-AGPL--3-blue.png" /></a> <a class="reference external image-reference" href="https://github.com/OCA/stock-logistics-reservation/tree/18.0/stock_removal_zone_fifo_location_zone"><img alt="OCA/stock-logistics-reservation" src="https://img.shields.io/badge/github-OCA%2Fstock--logistics--reservation-lightgray.png?logo=github" /></a> <a class="reference external image-reference" href="https://translation.odoo-community.org/projects/stock-logistics-reservation-18-0/stock-logistics-reservation-18-0-stock_removal_zone_fifo_location_zone"><img alt="Translate me on Weblate" src="https://img.shields.io/badge/weblate-Translate%20me-F47D42.png" /></a> <a class="reference external image-reference" href="https://runboat.odoo-community.org/builds?repo=OCA/stock-logistics-reservation&amp;target_branch=18.0"><img alt="Try me on Runboat" src="https://img.shields.io/badge/runboat-Try%20me-875A7B.png" /></a></p>
 <p>Glue module between <tt class="docutils literal">stock_removal_zone_fifo</tt> and
 <tt class="docutils literal">stock_location_zone</tt>, installed automatically when both are.</p>
-<p><tt class="docutils literal">stock_removal_zone_fifo</tt> resets the <tt class="docutils literal">Zone Entry Date</tt> of the goods
-on every move, because on its own it has no notion of what a zone is.
-This module answers that question with the zones of
-<tt class="docutils literal">stock_location_zone</tt>: the goods keep their zone entry date as long as
-the source and the destination locations belong to the same zone, and
-only get a fresh one when they really enter another zone.</p>
-<p>Without it, an internal reorganisation inside a picking zone would send
-the moved goods to the back of the Zone-Level FIFO queue.</p>
+<p><tt class="docutils literal">stock_removal_zone_fifo</tt> takes a zone to be the nearest ancestor
+location carrying the Zone-Level FIFO strategy. This module replaces
+that definition with the zones of <tt class="docutils literal">stock_location_zone</tt>, so the goods
+keep their zone entry date while they stay under the same location
+flagged <tt class="docutils literal">Is a Zone Location?</tt>.</p>
+<p>Install it when the zones of your warehouse do not line up with the
+locations you set the removal strategy on. Moves with no location
+flagged <tt class="docutils literal">Is a Zone Location?</tt> on either side keep the definition of
+<tt class="docutils literal">stock_removal_zone_fifo</tt>, so installing this module without flagging
+any zone changes nothing.</p>
 <p><strong>Table of contents</strong></p>
 <div class="contents local topic" id="contents">
 <ul class="simple">

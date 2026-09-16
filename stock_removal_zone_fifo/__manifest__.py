@@ -13,6 +13,7 @@
     "data": [
         "data/stock_removal_data.xml",
         "views/stock_quant_views.xml",
+        "views/res_config_settings_views.xml",
     ],
     "post_init_hook": "post_init_hook",
     "installable": True,

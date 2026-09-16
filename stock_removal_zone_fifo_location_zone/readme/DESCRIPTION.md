@@ -1,11 +1,12 @@
 Glue module between `stock_removal_zone_fifo` and `stock_location_zone`,
 installed automatically when both are.
 
-`stock_removal_zone_fifo` resets the `Zone Entry Date` of the goods on every
-move, because on its own it has no notion of what a zone is. This module answers
-that question with the zones of `stock_location_zone`: the goods keep their zone
-entry date as long as the source and the destination locations belong to the
-same zone, and only get a fresh one when they really enter another zone.
+`stock_removal_zone_fifo` takes a zone to be the nearest ancestor location
+carrying the Zone-Level FIFO strategy. This module replaces that definition with
+the zones of `stock_location_zone`, so the goods keep their zone entry date while
+they stay under the same location flagged `Is a Zone Location?`.
 
-Without it, an internal reorganisation inside a picking zone would send the
-moved goods to the back of the Zone-Level FIFO queue.
+Install it when the zones of your warehouse do not line up with the locations you
+set the removal strategy on. Moves with no location flagged `Is a Zone Location?`
+on either side keep the definition of `stock_removal_zone_fifo`, so installing
+this module without flagging any zone changes nothing.

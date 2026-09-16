@@ -11,8 +11,19 @@ class TestZoneFifoLocationZone(ZoneFifoCommon):
     def setUpClass(cls):
         super().setUpClass()
         (cls.zone_a | cls.zone_b).write({"is_zone": True})
-        cls.loc_outside = cls.env["stock.location"].create(
-            {"name": "Outside any zone", "location_id": cls.stock_loc.id}
+
+    def test_unflagged_locations_keep_the_strategy_zones(self):
+        """Flagging no zone at all must not disable Zone-Level FIFO."""
+        (self.zone_a | self.zone_b).write({"is_zone": False})
+        self._make_quant(
+            self.bin_a1,
+            10,
+            in_date="2026-01-01 08:00:00",
+            zone_in_date="2026-02-01 08:00:00",
+        )
+        self._move(self.bin_a1, self.bin_a2, 10)
+        self.assertEqual(
+            self._quant(self.bin_a2).zone_in_date, self._dt("2026-02-01 08:00:00")
         )
 
     def test_zones_are_wired(self):

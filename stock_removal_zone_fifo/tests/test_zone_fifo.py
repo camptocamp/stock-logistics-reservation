@@ -1,6 +1,8 @@
 # Copyright 2026 Camptocamp SA
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl.html).
 
+from odoo import fields
+
 from .common import ZoneFifoCommon
 
 
@@ -65,14 +67,60 @@ class TestZoneFifo(ZoneFifoCommon):
         move = self._move(self.stock_loc, self.customer_loc, 10, done=False)
         self.assertEqual(move.move_line_ids.location_id, self.bin_a2)
 
-    def test_move_leaves_the_core_behaviour_alone(self):
-        """Knowing no zone, it decides nothing on a move: zone_in_date keeps
-        following in_date, so the strategy behaves like the standard FIFO."""
-        self._make_quant(self.bin_a1, 10, in_date="2026-01-01 08:00:00")
+    def test_zone_location_is_the_nearest_ancestor_with_the_strategy(self):
+        self.assertEqual(self.bin_a1._get_zone_location(), self.zone_a)
+        self.assertEqual(self.zone_a._get_zone_location(), self.zone_a)
+        self.assertEqual(self.bin_b1._get_zone_location(), self.zone_b)
+        self.assertFalse(self.loc_outside._get_zone_location())
+
+    def test_move_inside_a_zone_keeps_the_date(self):
+        self._make_quant(
+            self.bin_a1,
+            10,
+            in_date="2026-01-01 08:00:00",
+            zone_in_date="2026-02-01 08:00:00",
+        )
         self._move(self.bin_a1, self.bin_a2, 10)
-        quant = self._quant(self.bin_a2)
-        self.assertEqual(quant.zone_in_date, self._dt("2026-01-01 08:00:00"))
-        self.assertEqual(quant.zone_in_date, quant.in_date)
+        self.assertEqual(
+            self._quant(self.bin_a2).zone_in_date, self._dt("2026-02-01 08:00:00")
+        )
+
+    def test_move_to_another_zone_resets_the_date(self):
+        self._make_quant(
+            self.bin_a1,
+            10,
+            in_date="2026-01-01 08:00:00",
+            zone_in_date="2026-02-01 08:00:00",
+        )
+        before = fields.Datetime.now()
+        self._move(self.bin_a1, self.bin_b1, 10)
+        self.assertGreaterEqual(self._quant(self.bin_b1).zone_in_date, before)
+
+    def test_move_out_of_every_zone_keeps_the_date(self):
+        """Nothing sorts the goods there, so the setting is off by default."""
+        self._make_quant(
+            self.bin_a1,
+            10,
+            in_date="2026-01-01 08:00:00",
+            zone_in_date="2026-02-01 08:00:00",
+        )
+        self._move(self.bin_a1, self.loc_outside, 10)
+        self.assertEqual(
+            self._quant(self.loc_outside).zone_in_date,
+            self._dt("2026-02-01 08:00:00"),
+        )
+
+    def test_move_out_of_every_zone_resets_the_date_when_asked(self):
+        self.env.company.zone_in_date_reset_out_of_zone = True
+        self._make_quant(
+            self.bin_a1,
+            10,
+            in_date="2026-01-01 08:00:00",
+            zone_in_date="2026-02-01 08:00:00",
+        )
+        before = fields.Datetime.now()
+        self._move(self.bin_a1, self.loc_outside, 10)
+        self.assertGreaterEqual(self._quant(self.loc_outside).zone_in_date, before)
 
     def test_move_keeps_the_original_in_date(self):
         """in_date is still carried over, untouched."""

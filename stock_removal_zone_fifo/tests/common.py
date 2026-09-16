@@ -29,13 +29,26 @@ class ZoneFifoCommon(BaseCommon):
             {"name": "Zone B", "location_id": cls.stock_loc.id}
         )
         cls.bin_b1 = Location.create({"name": "B1", "location_id": cls.zone_b.id})
+        cls.loc_outside = Location.create(
+            {"name": "Outside any zone", "location_id": cls.stock_loc.id}
+        )
 
-        # On the common parent, so a reservation over the whole stock picks it
-        # up whatever the bin the goods sit in.
-        cls.stock_loc.removal_strategy_id = cls.zone_fifo
+        # Each of these two locations carries the strategy, so each is a zone.
+        # stock_loc stays without one, which leaves loc_outside in no zone.
+        (cls.zone_a | cls.zone_b).write({"removal_strategy_id": cls.zone_fifo.id})
 
+        # On the category, so a reservation over the whole stock sorts with the
+        # strategy whatever the bin the goods sit in.
+        cls.categ = cls.env["product.category"].create(
+            {"name": "Zone FIFO Category", "removal_strategy_id": cls.zone_fifo.id}
+        )
         cls.product = cls.env["product.product"].create(
-            {"name": "Zone FIFO Product", "type": "consu", "is_storable": True}
+            {
+                "name": "Zone FIFO Product",
+                "type": "consu",
+                "is_storable": True,
+                "categ_id": cls.categ.id,
+            }
         )
 
     @classmethod

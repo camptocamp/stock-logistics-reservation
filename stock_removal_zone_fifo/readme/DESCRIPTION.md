@@ -11,6 +11,7 @@ quant, falling back on the incoming date:
 
     zone_in_date ASC, in_date ASC, id
 
-`zone_in_date` is set when the goods are put down in a location and, unlike
-`in_date`, it is never reset afterwards by a merge of stock or by an inventory
-adjustment. It is always set, so the sort above needs no NULL handling.
+`zone_in_date` is reset only when the goods enter another zone, unlike `in_date`
+which a merge of stock or an inventory adjustment can move. A zone is the nearest
+ancestor location carrying the strategy. It is always set, so the sort above
+needs no NULL handling.
